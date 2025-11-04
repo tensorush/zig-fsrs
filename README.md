@@ -1,6 +1,6 @@
 # zig-fsrs
 
-## Zig implementation of [FSRS-6 review scheduling algorithm](https://expertium.github.io/Algorithm.html).
+## Zig implementation of [FSRS-6 flashcard review scheduling algorithm](https://expertium.github.io/Algorithm.html).
 
 ### Usage
 
