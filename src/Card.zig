@@ -1,4 +1,4 @@
-//! Flashcard review scheduler based on the FSRS-6 algorithm.
+//! Flashcard for review scheduling based on the FSRS-6 algorithm.
 
 const std = @import("std");
 const zdt = @import("zdt");
@@ -34,6 +34,7 @@ pub const Rating = enum {
     Easy,
 };
 
+/// Create a card with the initial rating.
 pub fn init(rating: Rating) Card {
     return .{
         .state = .Learning,
