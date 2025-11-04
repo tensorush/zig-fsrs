@@ -1,0 +1,19 @@
+.{
+    .name = .fsrs,
+    .version = "1.0.0",
+    .fingerprint = 0xbdbb9a38f0f91199, // Changing this has security and trust implications.
+    .minimum_zig_version = "0.15.2",
+    .dependencies = .{
+        .zdt = .{
+            .url = "git+https://codeberg.org/FObersteiner/zdt.git#fa55f4080752ce1c48f2bb392e9513f87b59d8cb",
+            .hash = "zdt-0.8.1-xr0_vABUDwDExZVsT91Qid0tOc_48sI47Xhg6nbFsqqC",
+        },
+    },
+    .paths = .{
+        "src/",
+        "build.zig",
+        "build.zig.zon",
+        "LICENSE",
+        "README.md",
+    },
+}
