@@ -22,6 +22,14 @@ const FACTOR = std.math.pow(f64, 0.9, 1.0 / DECAY) - 1.0;
 const INIT_INTERVAL: zdt.Duration = .fromTimespanMultiple(10, .minute);
 const PARAMETERS = [21]f64{ 0.212, 1.2931, 2.3065, 8.2956, 6.4133, 0.8334, 3.0194, 0.001, 1.8722, 0.1666, 0.796, 1.4835, 0.0614, 0.2629, 1.6483, 0.6014, 1.8729, 0.5425, 0.0912, 0.0658, 0.1542 };
 
+const init: Card = .{
+    .state = .Learning,
+    .stability = undefined,
+    .difficulty = undefined,
+    .next_datetime = undefined,
+    .prev_datetime_opt = null,
+};
+
 pub const State = enum {
     Learning,
     Review,
@@ -34,30 +42,22 @@ pub const Rating = enum {
     Easy,
 };
 
-/// Create a card with the initial rating.
-pub fn init(rating: Rating) Card {
-    return .{
-        .state = .Learning,
-        .stability = PARAMETERS[@intFromEnum(rating)],
-        .difficulty = initialDifficulty(rating, true),
-        .next_datetime = undefined,
-        .prev_datetime_opt = null,
-    };
-}
-
 /// Review the card with the given rating at the given time.
 pub fn review(
     card: *Card,
     rating: Card.Rating,
     datetime: zdt.Datetime,
 ) zdt.ZdtError!void {
-    const is_short_term = if (card.prev_datetime_opt) |prev_datetime| datetime.diff(prev_datetime).totalDays() < 1.0 else true;
-
-    card.stability = if (is_short_term)
-        shortTermStability(card.stability, rating)
-    else
-        longTermStability(card.difficulty, card.stability, card.getRetrievability(datetime), rating);
-    card.difficulty = nextDifficulty(card.difficulty, rating);
+    if (card.prev_datetime_opt) |prev_datetime| {
+        card.stability = if (datetime.diff(prev_datetime).totalDays() < 1.0)
+            shortTermStability(card.stability, rating)
+        else
+            longTermStability(card.difficulty, card.stability, card.getRetrievability(datetime), rating);
+        card.difficulty = nextDifficulty(card.difficulty, rating);
+    } else {
+        card.stability = PARAMETERS[@intFromEnum(rating)];
+        card.difficulty = initialDifficulty(rating, true);
+    }
 
     const next_interval: zdt.Duration = blk: switch (card.state) {
         .Learning => switch (rating) {
@@ -144,7 +144,7 @@ fn longTermStability(difficulty: f64, stability: f64, retrievability: f64, ratin
 }
 
 test getRetrievability {
-    var card: Card = .init(.Good);
+    var card: Card = .init;
     try std.testing.expectEqual(.Learning, card.state);
     try std.testing.expectEqual(0.0, card.getRetrievability(.nowUTC()));
 
@@ -166,9 +166,9 @@ test getRetrievability {
 
 test review {
     const RATINGS = [_]Card.Rating{ .Good, .Good, .Good, .Good, .Good, .Good, .Again, .Again, .Good, .Good, .Good, .Good, .Good };
-    const EXPECTED_DAY_INTERVALS: [RATINGS.len]usize = .{ 2, 11, 46, 163, 498, 1348, 0, 0, 3, 5, 9, 16, 26 };
+    const EXPECTED_DAY_INTERVALS: [RATINGS.len]usize = .{ 2, 11, 46, 163, 497, 1346, 0, 0, 3, 5, 9, 16, 26 };
 
-    var card: Card = .init(RATINGS[0]);
+    var card: Card = .init;
     var datetime: zdt.Datetime = .nowUTC();
     inline for (RATINGS, EXPECTED_DAY_INTERVALS) |RATING, EXPECTED_DAY_INTERVAL| {
         try card.review(RATING, datetime);
